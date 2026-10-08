@@ -13,5 +13,5 @@ cargo clippy --all-targets
 - Update README.md if you changed public behavior.
 
 ## Related repos
-- sentinel-backend — scores addresses and calls this contract
-- sentinel-frontend — dashboard reading data derived from this contract
+- [sentinel-backend](https://github.com/Stellar-Sentinel/sentinel-backend) — reads contract events and exposes them through its API; it does not currently submit transactions.
+- [sentinel-frontend](https://github.com/Stellar-Sentinel/sentinel-frontend) — dashboard displaying screening results and backend-provided contract events.
