@@ -21,13 +21,55 @@ The backend reads events and does not sign or submit transactions. The contract 
 
 ## Testnet deployment
 
-The current Stellar Sentinel instance is deployed and initialized on Stellar Testnet with a score threshold of 70:
+The current Stellar Sentinel instance is deployed and initialized on the **Stellar Testnet**. It uses the Testnet network passphrase `Test SDF Network ; September 2015` and the Soroban RPC endpoint `https://soroban-testnet.stellar.org`.
 
-- Contract: [`CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX`](https://stellar.expert/explorer/testnet/contract/CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX)
-- Deployment transaction: [view on Stellar Expert](https://stellar.expert/explorer/testnet/tx/903e26dd3d1740d3833714fa30afaaf6466e0823c40250d842944dded6b8e123)
-- Initialization transaction: [view on Stellar Expert](https://stellar.expert/explorer/testnet/tx/bfd4da30f78d13160f95b6d401983db6f70bbba11273e9374989e5b4d0c19b2d)
+| Detail | Value |
+| --- | --- |
+| Contract ID | [`CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX`](https://stellar.expert/explorer/testnet/contract/CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX) |
+| Contract source | [`5b6b5a7`](https://github.com/Stellar-Sentinel/sentinel-contracts/commit/5b6b5a7df1219242579833d0f46f4f215745eca1) |
+| Wasm SHA-256 | `f501250438515ff26e18ebf951cd62de717c711e68d031fb0fad5c9a9b36bd5d` |
+| Score threshold | `70` (initialized) |
+| Admin account | `GAPNXDMWAMEWHEVMSDXYD5BS2V3P6E4A7OPG6F2MLME5666VSPT5BIHM` |
+| Authorized monitoring agents | None yet |
 
-The admin identity is held locally in the Stellar CLI's macOS Keychain under the alias `stellar-sentinel-testnet-admin`. Preserve its secure-store entry and recovery material; the secret is not part of this repository. The backend's `.env.example` is configured for this Testnet contract. No monitoring agent is authorized yet.
+Transaction records:
+
+- Wasm upload: [transaction `3838b8af1eadb429f37e7d4c3d6c8267773b138a967d13b816491090a32e3992`](https://stellar.expert/explorer/testnet/tx/3838b8af1eadb429f37e7d4c3d6c8267773b138a967d13b816491090a32e3992)
+- Contract deployment: [transaction `903e26dd3d1740d3833714fa30afaaf6466e0823c40250d842944dded6b8e123`](https://stellar.expert/explorer/testnet/tx/903e26dd3d1740d3833714fa30afaaf6466e0823c40250d842944dded6b8e123)
+- Initialization: [transaction `bfd4da30f78d13160f95b6d401983db6f70bbba11273e9374989e5b4d0c19b2d`](https://stellar.expert/explorer/testnet/tx/bfd4da30f78d13160f95b6d401983db6f70bbba11273e9374989e5b4d0c19b2d)
+
+The admin identity alias `stellar-sentinel-testnet-admin` is stored in the deploying machine's macOS Keychain using Stellar CLI secure storage. Its secret is not in this repository. Preserve the Keychain entry and securely back up the recovery material. The backend's `.env.example` points to this contract. The event feed is connected, but it currently has no flags because no monitoring agent has been authorized.
+
+### Reproduce a separate Testnet deployment
+
+These commands create a **new** identity and contract instance; they do not redeploy or alter the contract above. Install the Stellar CLI, Rust, and the Wasm target first. Keep the generated identity in secure storage and never commit its seed phrase.
+
+```bash
+stellar keys generate sentinel-admin --network testnet --fund --secure-store
+stellar contract build --locked
+stellar contract deploy \
+  --wasm target/wasm32v1-none/release/sentinel_contract.wasm \
+  --source-account sentinel-admin \
+  --network testnet \
+  --alias sentinel_contract
+stellar contract invoke \
+  --id sentinel_contract \
+  --source-account sentinel-admin \
+  --network testnet -- \
+  initialize --admin sentinel-admin --default-threshold 70
+```
+
+To verify this deployment's initialized threshold without submitting a transaction:
+
+```bash
+stellar contract invoke \
+  --id <CONTRACT_ID> \
+  --source-account sentinel-admin \
+  --network testnet --send=no -- \
+  get_threshold
+```
+
+Set the resulting contract ID as the backend's `CONTRACT_ID`. Keep its Horizon and Soroban RPC endpoints on Testnet as well.
 
 ## Project layout
 
@@ -38,16 +80,17 @@ The admin identity is held locally in the Stellar CLI's macOS Keychain under the
 
 ## Build and test
 
-Requires stable Rust and the `wasm32-unknown-unknown` target. There are no contract-specific environment variables; network IDs and credentials are supplied to deployment tooling outside this repository.
+Requires stable Rust, the `wasm32-unknown-unknown` and `wasm32v1-none` targets, and Stellar CLI for optimized deployment builds. There are no contract-specific environment variables; network IDs and signing identities are supplied to deployment tooling outside this repository.
 
 ```bash
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32-unknown-unknown wasm32v1-none
 cargo build --target wasm32-unknown-unknown --release
+stellar contract build --locked
 cargo test
 cargo clippy --all-targets -- -D warnings
 ```
 
-The deployable Wasm artifact is under `target/wasm32-unknown-unknown/release/`. CI runs the same build, test, and lint checks (Clippy).
+The CI Wasm artifact is under `target/wasm32-unknown-unknown/release/`. `stellar contract build --locked` creates the optimized deployable artifact under `target/wasm32v1-none/release/`. CI runs the Wasm build, tests, and lint checks (Clippy).
 
 ## Contract interface
 
