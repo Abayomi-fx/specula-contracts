@@ -17,7 +17,17 @@ flowchart LR
   Backend -->|JSON API| UI[Dashboard]
 ```
 
-The backend currently reads events and does not sign or submit transactions. The contract must be deployed and initialized on the same network as the backend's configured Soroban RPC before its events can appear in the dashboard.
+The backend reads events and does not sign or submit transactions. The contract and backend RPC must use the same network for events to appear in the dashboard.
+
+## Testnet deployment
+
+The current Stellar Sentinel instance is deployed and initialized on Stellar Testnet with a score threshold of 70:
+
+- Contract: [`CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX`](https://stellar.expert/explorer/testnet/contract/CCZAAZ3FJ7LKZA7E7A6EKQTU2HCNVI3YUVIHKWHSULGZSWAJFS2D2XVX)
+- Deployment transaction: [view on Stellar Expert](https://stellar.expert/explorer/testnet/tx/903e26dd3d1740d3833714fa30afaaf6466e0823c40250d842944dded6b8e123)
+- Initialization transaction: [view on Stellar Expert](https://stellar.expert/explorer/testnet/tx/bfd4da30f78d13160f95b6d401983db6f70bbba11273e9374989e5b4d0c19b2d)
+
+The admin identity is held locally in the Stellar CLI's macOS Keychain under the alias `stellar-sentinel-testnet-admin`. Preserve its secure-store entry and recovery material; the secret is not part of this repository. The backend's `.env.example` is configured for this Testnet contract. No monitoring agent is authorized yet.
 
 ## Project layout
 
