@@ -12,7 +12,7 @@ fn test_initialize_and_threshold() {
     env.mock_all_auths();
 
     client.initialize(&admin, &75);
-    assert_eq!(client.get_threshold(), 75);
+    assert_eq!(client.get_threshold(), Some(75));
     assert!(!client.is_agent(&admin));
 }
 
@@ -76,7 +76,7 @@ fn admin_can_change_threshold_and_revoke_agents() {
     client.initialize(&admin, &75);
     client.authorize_agent(&admin, &agent);
     client.set_threshold(&admin, &80);
-    assert_eq!(client.get_threshold(), 80);
+    assert_eq!(client.get_threshold(), Some(80));
     client.revoke_agent(&admin, &agent);
     assert!(!client.is_agent(&agent));
 }
@@ -152,4 +152,23 @@ fn agent_cannot_submit_score_above_100() {
     client.initialize(&admin, &75);
     client.authorize_agent(&admin, &agent);
     client.flag_anomaly(&agent, &subject, &101);
+}
+
+#[test]
+fn get_threshold_is_none_before_initialization() {
+    let env = Env::default();
+    let contract_id = env.register(StellarSentinel, ());
+    let client = StellarSentinelClient::new(&env, &contract_id);
+    assert_eq!(client.get_threshold(), None);
+}
+
+#[test]
+fn zero_threshold_is_distinguishable_from_unset() {
+    let env = Env::default();
+    let contract_id = env.register(StellarSentinel, ());
+    let client = StellarSentinelClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    env.mock_all_auths();
+    client.initialize(&admin, &0);
+    assert_eq!(client.get_threshold(), Some(0));
 }
